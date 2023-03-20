@@ -43,10 +43,13 @@ def create_commendation(Name, lesson_title):
     letter = child.group_letter
 
     try:
-        Lessons = Lesson.objects.get(year_of_study=6, group_letter=letter,
-                                     subject__title__contains=lesson_title)
+        Lesson.objects.get(year_of_study=6, group_letter=letter,
+                           subject__title__contains=lesson_title)
     except ObjectDoesNotExist:
         raise Exception("Введенный предмет не найден")
+    except MultipleObjectsReturned:
+        Lessons = Lesson.objects.filter(year_of_study=6, group_letter=letter,
+                                        subject__title__contains=lesson_title)
 
     list_praise = ["Молодец!", "Отлично!", "Хорошо!",
                    "Гораздо лучше, чем я ожидал!", "Приятно удивил!",
