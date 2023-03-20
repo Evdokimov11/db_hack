@@ -87,6 +87,7 @@ scripts.remove_chastisements("Фролов Иван")
 scripts.create_commendation("Фролов Иван", "Математика")
 ```
 Пример запуска кода представлен ниже:
+
 ![image](https://user-images.githubusercontent.com/42433463/226239453-8d4fbef8-6ab8-4fce-9822-c80a50a485c0.png)
 
 
@@ -111,6 +112,7 @@ scripts.create_commendation("Фролов Иван", "Математика")
 scripts.update_all("Фролов Иван","Математика")
 ```
 Пример запуска кода представлен ниже:
+
 ![image](https://user-images.githubusercontent.com/42433463/226239749-6a37b673-9fae-4ab4-b492-54e8c51a38cc.png)
 
 
