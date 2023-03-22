@@ -4,73 +4,68 @@ import random
 
 from datacenter.models import (Chastisement, Commendation,
                                Lesson, Mark, Schoolkid)
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 
 
-def check_student(Name):
+PRAISES = ["Молодец!", "Отлично!", "Хорошо!",
+           "Гораздо лучше, чем я ожидал!",
+           "Приятно удивил!", "Великолепно!",
+           "Прекрасно!", "Ты меня очень обрадовал!",
+           "Очень хороший ответ!", "Талантливо!",
+           "Уже существенно лучше!", "Потрясающе!"]
+
+
+def check_student(name):
 
     try:
-        child = Schoolkid.objects.get(full_name__contains=Name)
+        child = Schoolkid.objects.get(full_name__contains=name)
         return child
-    except MultipleObjectsReturned:
+    except Schoolkid.MultipleObjectsReturned:
         raise Exception("Найдено два или более учеников")
-    except ObjectDoesNotExist:
+    except Schoolkid.DoesNotExist:
         raise Exception("Данный ученик не найден")
 
 
-def fix_marks(Name):
+def fix_marks(name):
 
-    child = check_student(Name)
-    Ivan_bad_marks = Mark.objects.filter(schoolkid_id=child.id, points__lt=4)
-
-    for Ivan_bad_mark in Ivan_bad_marks:
-
-        Ivan_bad_mark.points = 5
-        Ivan_bad_mark.save()
+    child = check_student(name)
+    Mark.objects.filter(schoolkid_id=child.id, points__lt=7).update(points=5)
 
 
-def remove_chastisements(Name):
+def remove_chastisements(name):
 
-    child = check_student(Name)
+    child = check_student(name)
 
-    Ivan_Chastisements = Chastisement.objects.filter(schoolkid_id=child.id)
-    Ivan_Chastisements.delete()
+    chastisements = Chastisement.objects.filter(schoolkid_id=child.id)
+    chastisements.delete()
 
 
-def create_commendation(Name, lesson_title):
+def create_commendation(name, lesson_title):
 
-    child = check_student(Name)
+    child = check_student(name)
     letter = child.group_letter
+    year_of_study = child.year_of_study
 
-    try:
-        Lesson.objects.get(year_of_study=6, group_letter=letter,
-                           subject__title__contains=lesson_title)
-    except ObjectDoesNotExist:
-        raise Exception("Введенный предмет не найден")
-    except MultipleObjectsReturned:
-        Lessons = Lesson.objects.filter(year_of_study=6, group_letter=letter,
-                                        subject__title__contains=lesson_title)
+    lessons = Lesson.objects.filter(year_of_study=year_of_study,
+                                    group_letter=letter,
+                                    subject__title__contains=lesson_title)
+    if not lessons:
 
-    list_praise = ["Молодец!", "Отлично!", "Хорошо!",
-                   "Гораздо лучше, чем я ожидал!", "Приятно удивил!",
-                   "Великолепно!", "Прекрасно!",
-                   "Ты меня очень обрадовал!", "Очень хороший ответ!",
-                   "Талантливо!", "Уже существенно лучше!", "Потрясающе!"]
+        raise Exception("Введенный предмет у данного ученика не найден")
 
-    praise = random.choice(list_praise)
+    praise = random.choice(PRAISES)
 
-    Lessons_ordered = Lessons.order_by("-date")
-    Lesson_date = Lessons_ordered[0].date
-    Lesson_name = Lessons_ordered[0].subject
-    Lesson_teacher = Lessons_ordered[0].teacher
+    lessons_ordered = lessons.order_by("-date").first()
+    lesson_date = lessons_ordered.date
+    lesson_name = lessons_ordered.subject
+    lesson_teacher = lessons_ordered.teacher
 
-    Commendation.objects.create(text=praise, created=Lesson_date,
-                                schoolkid=child, subject=Lesson_name,
-                                teacher=Lesson_teacher)
+    Commendation.objects.create(text=praise, created=lesson_date,
+                                schoolkid=child, subject=lesson_name,
+                                teacher=lesson_teacher)
 
 
-def update_all(Name="Фролов Иван", Lesson_title="Математика"):
+def update_all(name="Фролов Иван", lesson_title="Математика"):
 
-    fix_marks(Name)
-    remove_chastisements(Name)
-    create_commendation(Name, Lesson_title)
+    fix_marks(name)
+    remove_chastisements(name)
+    create_commendation(name, lesson_title)
