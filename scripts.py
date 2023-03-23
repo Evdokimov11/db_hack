@@ -28,7 +28,7 @@ def check_student(name):
 def fix_marks(name):
 
     child = check_student(name)
-    Mark.objects.filter(schoolkid_id=child.id, points__lt=7).update(points=5)
+    Mark.objects.filter(schoolkid_id=child.id, points__lt=4).update(points=5)
 
 
 def remove_chastisements(name):
@@ -47,17 +47,17 @@ def create_commendation(name, lesson_title):
 
     lessons = Lesson.objects.filter(year_of_study=year_of_study,
                                     group_letter=letter,
-                                    subject__title__contains=lesson_title)
+                                    subject__title__contains=lesson_title).order_by("-date")
     if not lessons:
 
         raise Exception("Введенный предмет у данного ученика не найден")
 
     praise = random.choice(PRAISES)
 
-    lessons_ordered = lessons.order_by("-date").first()
-    lesson_date = lessons_ordered.date
-    lesson_name = lessons_ordered.subject
-    lesson_teacher = lessons_ordered.teacher
+    lesson = lessons.first()
+    lesson_date = lesson.date
+    lesson_name = lesson.subject
+    lesson_teacher = lesson.teacher
 
     Commendation.objects.create(text=praise, created=lesson_date,
                                 schoolkid=child, subject=lesson_name,
